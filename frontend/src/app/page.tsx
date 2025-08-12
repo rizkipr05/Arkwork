@@ -4,7 +4,13 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import Image from "next/image";
 
-type FetchedItem = { title: string; link: string; pubDate: string | null; source: string };
+type FetchedItem = {
+  title: string;
+  link: string;
+  pubDate: string | null;
+  source: string;
+  image?: string | null;
+};
 
 type News = {
   id: string;
@@ -20,7 +26,7 @@ type News = {
 async function fetchEnergyNews(params: { limit?: number; keywords?: string }) {
   const q = new URLSearchParams({
     limit: String(params.limit ?? 24),
-    scope: "id", // hanya Indonesia
+    scope: "id",
     lang: "id",
     country: "ID",
   });
@@ -31,7 +37,7 @@ async function fetchEnergyNews(params: { limit?: number; keywords?: string }) {
   return (await res.json()) as { count: number; items: FetchedItem[] };
 }
 
-// --- placeholder dari picsum + seed konsisten ---
+// Placeholder kalau og:image tidak ada
 function pickImage(key: string) {
   let sum = 0;
   for (let i = 0; i < key.length; i++) sum = (sum + key.charCodeAt(i)) % 9973;
@@ -59,16 +65,18 @@ export default function Page() {
     try {
       const keywords = [q.trim(), category !== "Semua" ? category : ""].filter(Boolean).join(" ");
       const data = await fetchEnergyNews({ limit: 24, keywords: keywords || undefined });
+
       const mapped: News[] = data.items.map((it, idx) => ({
         id: String(idx),
         title: it.title,
         description: "",
-        image: pickImage(it.title + it.source),
+        image: it.image || pickImage(it.title + it.source), // pakai og:image jika ada
         source: it.source,
         url: it.link,
         category: category === "Semua" ? "News" : category,
         publishedAt: it.pubDate ?? new Date().toISOString(),
       }));
+
       setItems(mapped);
     } catch (err: any) {
       console.error(err);
@@ -80,7 +88,7 @@ export default function Page() {
   }
 
   useEffect(() => {
-    search(); // muat awal
+    search(); // load awal
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -220,7 +228,7 @@ function Select({
 }
 
 function NewsCard({ item }: { item: News }) {
-  const [imgSrc, setImgSrc] = useState(item.image); // fallback jika gagal
+  const [imgSrc, setImgSrc] = useState(item.image);
 
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm hover:shadow-md transition">
@@ -232,7 +240,6 @@ function NewsCard({ item }: { item: News }) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           onError={() => setImgSrc("/placeholder.svg")}
-          priority={false}
         />
       </div>
 

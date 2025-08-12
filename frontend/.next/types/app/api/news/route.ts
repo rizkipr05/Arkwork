@@ -1,4 +1,4 @@
-// File: D:\arkwork-starter\arkwork-starter\frontend\src\app\api\news\route.ts
+// File: C:\Users\Aeldra\Desktop\ArkWork\frontend\src\app\api\news\route.ts
 import * as entry from '../../../../../src/app/api/news/route.js'
 import type { NextRequest } from 'next/server.js'
 

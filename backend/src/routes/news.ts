@@ -3,41 +3,20 @@ import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
 import Parser from "rss-parser";
 
-type Env = {
-  APP_NAME?: string;
-};
-
-const { APP_NAME = "ArkWork" } = process.env as Env;
 const router = Router();
 
-// ==== Rate limit khusus endpoint berita ====
-const limiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
+// Limit request supaya tidak di-spam
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+});
 router.use(limiter);
 
-// ==== Tipe data untuk hasil akhir ====
-export type NewsItem = {
-  title: string;
-  link: string;
-  pubDate: string | null;
-  source?: string;
-};
-
-// ==== Tipe item dari rss-parser (Google News) ====
-type GNewsItem = {
-  title?: string;
-  link?: string;
-  pubDate?: string;
-  source?: string;
-  creator?: string;
-  author?: string;
-};
-
-// Parser dengan UA khusus
-const parser = new Parser<GNewsItem>({
-  headers: { "User-Agent": `${APP_NAME.toLowerCase()}-aggregator/1.0` },
+const parser = new Parser({
+  headers: { "User-Agent": "arkwork-energy-news/1.0" },
 });
 
-// Helper bikin URL Google News RSS
+// Buat URL Google News RSS
 function gnewsUrl(query: string, lang = "id", country = "ID") {
   const base = "https://news.google.com/rss/search";
   const p = new URLSearchParams({
@@ -49,7 +28,7 @@ function gnewsUrl(query: string, lang = "id", country = "ID") {
   return `${base}?${p.toString()}`;
 }
 
-// Query default
+// Query default untuk migas & energi
 const ID_QUERIES = [
   "(migas OR minyak OR gas OR energi) site:esdm.go.id",
   "(migas OR minyak OR gas OR energi) site:katadata.co.id",
@@ -74,54 +53,48 @@ router.get("/energy", async (req: Request, res: Response) => {
     const lang = String(req.query.lang ?? "id");
     const country = String(req.query.country ?? "ID");
     const customKeywords = (req.query.keywords ?? "").toString().trim();
-    const when = (req.query.when ?? "").toString().trim(); // contoh: 7d
 
-    let queries =
-      scope === "id"
-        ? ID_QUERIES
-        : scope === "global"
-        ? GLOBAL_QUERIES
-        : [...ID_QUERIES, ...GLOBAL_QUERIES];
+    let queries: string[] = [];
+    if (scope === "id") queries = ID_QUERIES;
+    else if (scope === "global") queries = GLOBAL_QUERIES;
+    else queries = [...ID_QUERIES, ...GLOBAL_QUERIES];
 
-    if (customKeywords) queries = queries.map(() => customKeywords);
-    if (when) queries = queries.map((q) => `(${q}) when:${when}`);
+    if (customKeywords) {
+      queries = queries.map(() => customKeywords);
+    }
 
     const feeds = await Promise.all(
       queries.map(async (q) => {
         const feed = await parser.parseURL(gnewsUrl(q, lang, country));
-        const items: NewsItem[] =
+        return (
           feed.items?.map((it) => ({
-            title: it.title || "",
-            link: it.link || "",
+            title: it.title ?? "",
+            link: it.link ?? "",
             pubDate: it.pubDate ? new Date(it.pubDate).toISOString() : null,
-            source: it.source || it.creator || it.author || "Google News",
-          })) ?? [];
-        return items;
+            source: (it as any).source || it.creator || it.author || "Google News",
+          })) ?? []
+        );
       })
     );
 
     const all = feeds.flat();
+    const seen = new Set();
+    const deduped: typeof all = [];
 
-    // Dedup by link/title
-    const seen = new Set<string>();
-    const deduped: NewsItem[] = [];
     for (const a of all) {
-      const key = (a.link || a.title).trim();
+      const key = a.link || a.title;
       if (key && !seen.has(key)) {
         seen.add(key);
         deduped.push(a);
       }
     }
 
-    // Sort by pubDate desc
     deduped.sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || ""));
 
     res.json({
-      app: APP_NAME,
       scope,
       lang,
       country,
-      when: when || null,
       count: Math.min(deduped.length, limit),
       items: deduped.slice(0, limit),
     });

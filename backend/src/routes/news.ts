@@ -1,4 +1,3 @@
-// src/routes/news.ts
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
 import Parser from "rss-parser";

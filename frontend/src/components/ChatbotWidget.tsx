@@ -3,9 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Msg = { id: string; role: "user" | "assistant"; text: string; ts: number };
+type Profile = {
+  name?: string;
+  role?: string;
+  skills?: string;
+  location?: string;
+  experienceYears?: number;
+  interests?: string;
+};
 
 const STORAGE_KEY = "ogm-chat-history-v1";
-const CHAT_API = "/api/chat"; // backend via rewrite
+const PROFILE_KEY = "ogm-chat-profile-v1";
+const CHAT_API = "/api/chat";
 
 function formatTime(ts: number) {
   const d = new Date(ts);
@@ -17,38 +26,58 @@ export default function ChatbotWidget() {
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [intent, setIntent] = useState<"news" | "jobs" | "consult">("news");
+  const [profile, setProfile] = useState<Profile>({});
+  const [showProfile, setShowProfile] = useState(false);
+
   const listRef = useRef<HTMLDivElement>(null);
 
-  // load history
+  // load history & profile
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setMsgs(JSON.parse(raw));
+      const p = localStorage.getItem(PROFILE_KEY);
+      if (p) setProfile(JSON.parse(p));
     } catch {}
   }, []);
 
-  // save history
+  // save history & profile
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
     } catch {}
   }, [msgs]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    } catch {}
+  }, [profile]);
 
   // auto scroll
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [msgs, open, busy]);
 
-  // quick suggestions
-  const suggestions = useMemo(
-    () => [
+  const suggestions = useMemo(() => {
+    if (intent === "jobs")
+      return [
+        "Rekomendasikan role migas untuk operator kilang 2 tahun di Balikpapan",
+        "Skill apa agar masuk tim HSE di LNG?",
+        "Sertifikasi wajib untuk field engineer?",
+      ];
+    if (intent === "consult")
+      return [
+        "Saya ingin pindah dari operator ke planner—langkahnya?",
+        "Bikin roadmap 90 hari belajar analytics produksi",
+        "Bagaimana persiapan wawancara teknis kilang?",
+      ];
+    return [
       "Ringkas berita migas hari ini",
       "Apa itu upstream & downstream?",
-      "Harga minyak Brent terkini?",
       "Berita LNG Indonesia terbaru",
-    ],
-    []
-  );
+    ];
+  }, [intent]);
 
   async function ask(text: string) {
     if (!text.trim() || busy) return;
@@ -62,6 +91,8 @@ export default function ChatbotWidget() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          intent,
+          profile,
           messages: [
             ...msgs.map(({ role, text }) => ({ role, content: text })),
             { role: "user", content: text.trim() },
@@ -118,7 +149,6 @@ export default function ChatbotWidget() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 grid place-items-center">
-                {/* mini robot */}
                 <svg viewBox="0 0 24 24" className="h-4 w-4 text-white">
                   <rect x="5" y="7" width="14" height="10" rx="3" fill="currentColor" />
                   <circle cx="10" cy="12" r="1" fill="#111" />
@@ -127,18 +157,53 @@ export default function ChatbotWidget() {
               </div>
               <div>
                 <div className="font-semibold text-neutral-900 dark:text-neutral-100">ArkWork Agent</div>
-                <div className="text-xs text-neutral-500">Tanya seputar berita migas</div>
+                <div className="text-xs text-neutral-500">Berita • Kerja • Konsultasi</div>
               </div>
             </div>
-            <button
-              className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              onClick={() => setOpen(false)}
-              aria-label="Tutup"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5">
-                <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowProfile(true)}
+                className="px-2 py-1 text-xs rounded-lg border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                title="Profil"
+              >
+                Profil
+              </button>
+              <button
+                className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                onClick={() => setOpen(false)}
+                aria-label="Tutup"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5">
+                  <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Mode chips */}
+          <div className="px-3 py-2 flex gap-2 border-b border-neutral-200 dark:border-neutral-800">
+            {[
+              { k: "news", label: "Berita" },
+              { k: "jobs", label: "Kerja" },
+              { k: "consult", label: "Konsultasi" },
+            ].map((m) => {
+              const active = intent === (m.k as any);
+              return (
+                <button
+                  key={m.k}
+                  onClick={() => setIntent(m.k as any)}
+                  className={[
+                    "px-3 py-1.5 rounded-full text-xs border transition",
+                    active
+                      ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent"
+                      : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                  ].join(" ")}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Messages */}
@@ -201,7 +266,13 @@ export default function ChatbotWidget() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Tulis pesan…"
+                placeholder={
+                  intent === "jobs"
+                    ? "Tanya role/skills/sertifikasi…"
+                    : intent === "consult"
+                    ? "Ceritakan situasi/tujuanmu…"
+                    : "Tanya berita/konteks migas…"
+                }
                 className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
               />
               <button
@@ -214,6 +285,96 @@ export default function ChatbotWidget() {
           </form>
         </div>
       )}
+
+      {/* Panel Profil */}
+      {open && showProfile && (
+        <ProfileSheet
+          profile={profile}
+          onClose={() => setShowProfile(false)}
+          onSave={(p) => {
+            setProfile(p);
+            setShowProfile(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+/* ==== Profil Sheet (mini form) ==== */
+function ProfileSheet({
+  profile,
+  onClose,
+  onSave,
+}: {
+  profile: Profile;
+  onClose: () => void;
+  onSave: (p: Profile) => void;
+}) {
+  const [form, setForm] = useState<Profile>(profile || {});
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end pointer-events-none">
+      <div className="absolute inset-0 bg-black/30 pointer-events-auto" onClick={onClose} />
+      <div className="relative m-4 w-[min(92vw,380px)] pointer-events-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold">Profil ArkWork</div>
+          <button onClick={onClose} aria-label="Tutup" className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+            <svg viewBox="0 0 24 24" className="h-5 w-5">
+              <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <Input label="Nama (opsional)" value={form.name || ""} onChange={(v) => setForm({ ...form, name: v })} />
+          <Input label="Role saat ini" value={form.role || ""} onChange={(v) => setForm({ ...form, role: v })} />
+          <Input label="Skills utama" value={form.skills || ""} onChange={(v) => setForm({ ...form, skills: v })} />
+          <Input label="Lokasi" value={form.location || ""} onChange={(v) => setForm({ ...form, location: v })} />
+          <Input
+            label="Pengalaman (tahun)"
+            value={String(form.experienceYears ?? "")}
+            onChange={(v) => setForm({ ...form, experienceYears: v ? Number(v) : undefined })}
+            type="number"
+          />
+          <Input label="Minat/target" value={form.interests || ""} onChange={(v) => setForm({ ...form, interests: v })} />
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700">
+            Batal
+          </button>
+          <button
+            onClick={() => onSave(form)}
+            className="px-3 py-2 text-sm rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+          >
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs text-neutral-500">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
+      />
+    </label>
   );
 }

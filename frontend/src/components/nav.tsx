@@ -1,16 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePathname } from 'next/navigation'
+
+// Static import supaya logo pasti muncul
+import ArkLogo from '@/app/Images/ArkWork.png'
 
 export default function Nav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { user, logout } = useAuth()
 
-  // close drawer saat klik di luar
+  // tutup drawer saat klik luar
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       const t = e.target as HTMLElement
@@ -33,15 +37,19 @@ export default function Nav() {
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-neutral-200/60 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-neutral-800 dark:bg-neutral-950/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 shadow-sm" />
-          <span className="font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-            ArkWork
-          </span>
-        </Link>
-
+        <Link href="/" className="flex items-center gap-2" aria-label="ArkWork Home">
+        <Image
+          src={ArkLogo}
+          alt="ArkWork"
+          width={240} // lebih besar
+          height={240}
+          priority
+          className="w-auto h-20 md:h-24 object-contain" // tinggi naik
+        />
+      </Link>
         {/* Desktop menu */}
         <div className="hidden items-center gap-1 md:flex">
           {links.map((l) => {
@@ -60,13 +68,13 @@ export default function Nav() {
             <>
               <Link
                 href="/auth/signin"
-                className="inline-flex items-center rounded-xl border border-blue-600 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+                className="inline-flex items-center rounded-xl border border-blue-600 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
               >
                 Sign In
               </Link>
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center rounded-xl bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-600"
+                className="inline-flex items-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
               >
                 Sign Up
               </Link>
@@ -79,12 +87,9 @@ export default function Nav() {
               >
                 Dashboard
               </Link>
-              <span className="hidden text-sm text-neutral-600 dark:text-neutral-400 lg:inline">
-                Hi, {user.name}!
-              </span>
               <button
                 onClick={logout}
-                className="inline-flex items-center rounded-xl border border-red-600 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white"
+                className="inline-flex items-center rounded-xl border border-red-600 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white"
               >
                 Logout
               </button>
@@ -119,9 +124,15 @@ export default function Nav() {
         aria-hidden={!open}
       >
         <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400" />
-            <span className="font-semibold text-neutral-900 dark:text-neutral-100">ArkWork</span>
+          <div className="flex items-center">
+            <Image
+              src={ArkLogo}
+              alt="ArkWork"
+              width={80}
+              height={80}
+              priority
+              className="w-auto h-12 object-contain"
+            />
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -198,8 +209,6 @@ export default function Nav() {
     </nav>
   )
 }
-
-/* -------- small subcomponent for desktop link -------- */
 
 function NavLink({
   href,

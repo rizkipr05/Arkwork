@@ -1,51 +1,66 @@
 "use client";
 
+import Image from "next/image";
+// Ganti path ini kalau file gambarnya beda lokasi/format
+import ArkHero from "@/app/Images/1.jpg";
+
 export default function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section
-        className="relative overflow-hidden"
-        aria-labelledby="hero-title"
-      >
-        {/* background */}
+      <section className="relative overflow-hidden" aria-labelledby="hero-title">
+        {/* Gambar latar + overlay gelap */}
+        <div className="absolute inset-0 -z-20">
+          <Image
+            src={ArkHero}
+            alt="ArkWork Background"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          {/* Overlay gelap – ubah /30 jadi /20 (lebih terang) atau /40 (lebih gelap) */}
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+
+        {/* Gradasi lembut di atas overlay (untuk kesan lebih elegan) */}
         <div
           className="absolute inset-0 -z-10"
           style={{
             backgroundImage:
-              "radial-gradient(1200px 600px at 20% -10%, rgba(29,78,216,.35), transparent), radial-gradient(900px 500px at 90% 0%, rgba(234,179,8,.25), transparent)",
+              "radial-gradient(1000px 500px at 20% -10%, rgba(29,78,216,.30), transparent), radial-gradient(800px 450px at 90% 0%, rgba(234,179,8,.18), transparent)",
           }}
         />
-        {/* decorative blobs */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute top-16 -right-24 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
 
+        {/* Konten */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
           <h1
             id="hero-title"
-            className="text-4xl md:text-6xl font-extrabold tracking-tight text-neutral-900"
+            className="text-4xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-sm"
           >
             Power Your Career in the{" "}
-            <span className="bg-gradient-to-r from-blue-700 via-blue-600 to-amber-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-amber-300 bg-clip-text text-transparent">
               Energy Sector
             </span>
           </h1>
-          <p className="mt-4 text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto">
-            ArkWork connects energy professionals with opportunities across
-            oil & gas, LNG, utilities, and emerging energy technologies. Browse jobs,
-            get industry insights, and discover companies—all in one place.
+
+          <p className="mt-4 text-lg md:text-xl text-neutral-100/90 max-w-3xl mx-auto">
+            ArkWork connects energy professionals with opportunities across oil
+            &amp; gas, LNG, utilities, and emerging energy technologies. Browse
+            jobs, get industry insights, and discover companies—all in one
+            place.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
             <a
               href="/jobs"
-              className="inline-flex items-center justify-center rounded-xl bg-blue-700 px-6 py-3 text-white font-semibold shadow hover:bg-blue-600 active:translate-y-[1px] transition"
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-white font-semibold shadow hover:bg-blue-500 active:translate-y-[1px] transition"
             >
               Explore Jobs
             </a>
             <a
               href="/applications"
-              className="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 py-3 text-neutral-900 font-semibold hover:bg-neutral-50 transition"
+              className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-white font-semibold backdrop-blur hover:bg-white/20 transition"
             >
               Browse Companies
             </a>
@@ -71,9 +86,7 @@ export default function HomePage() {
               href="/jobs"
               title="Browse Jobs"
               desc="Search thousands of sector opportunities with advanced filters."
-              icon={
-                <MagnifierIcon className="h-6 w-6 text-blue-700" />
-              }
+              icon={<MagnifierIcon className="h-6 w-6 text-blue-700" />}
             />
             <CardLink
               href="/applications"
@@ -99,8 +112,8 @@ export default function HomePage() {
               Everything You Need for Energy Careers
             </h2>
             <p className="mt-2 text-neutral-600 max-w-3xl mx-auto">
-              From job search to industry insights, ArkWork provides comprehensive
-              tools for energy sector professionals.
+              From job search to industry insights, ArkWork provides
+              comprehensive tools for energy sector professionals.
             </p>
           </div>
 
@@ -154,7 +167,7 @@ export default function HomePage() {
               <div className="mt-6">
                 <a
                   href="/dashboard"
-                  className="inline-flex items-center justify-center rounded-xl bg-blue-700 px-6 py-3 text-white font-semibold shadow hover:bg-blue-600 active:translate-y-[1px] transition"
+                  className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-white font-semibold shadow hover:bg-blue-500 active:translate-y-[1px] transition"
                 >
                   Go to Dashboard
                 </a>
@@ -213,7 +226,9 @@ function Feature({
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="h-10 w-10 rounded-xl bg-neutral-100 grid place-items-center">{icon}</div>
+        <div className="h-10 w-10 rounded-xl bg-neutral-100 grid place-items-center">
+          {icon}
+        </div>
         <div>
           <h4 className="font-semibold text-neutral-900">{title}</h4>
           <p className="text-sm text-neutral-600 mt-1">{desc}</p>

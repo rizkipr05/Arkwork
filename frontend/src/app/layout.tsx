@@ -1,30 +1,37 @@
-import "./globals.css";
-import type { Metadata } from "next";
+import './globals.css'
+import { Inter } from 'next/font/google'
+import Nav from '@/components/nav'
+import { AuthProvider } from '@/hooks/useAuth'
+import type { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: "O&G Monitor",
-  description: "Berita Oil & Gas Indonesia",
-};
-
-function ThemeInitScript() {
-  const code = `
-(function () {
-  try {
-    var stored = localStorage.getItem('theme');
-    var wantDark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var root = document.documentElement;
-    if (wantDark) root.classList.add('dark'); else root.classList.remove('dark');
-  } catch (e) {}
-})();
-`;
-  return <script dangerouslySetInnerHTML={{ __html: code }} />;
+  title: 'ArkWork - Build Your Career in Energy & Oil & Gas',
+  description: 'Find the latest jobs, tenders, and trainings only on ArkWork'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" suppressHydrationWarning>
-      <head><ThemeInitScript /></head>
-      <body className="antialiased bg-neutral-50 dark:bg-neutral-950">{children}</body>
+    <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-gray-50">
+        <AuthProvider>
+          <Nav />
+          <main className="pt-16">{children}</main>
+        </AuthProvider>
+      </body>
     </html>
-  );
+  )
 }

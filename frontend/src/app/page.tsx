@@ -11,14 +11,15 @@ export default function HomePage() {
       <section className="relative overflow-hidden" aria-labelledby="hero-title">
         {/* Gambar latar + overlay gelap */}
         <div className="absolute inset-0 -z-20">
-          <Image
-            src={ArkHero}
-            alt="ArkWork Background"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
+        <Image
+          src={ArkHero}
+          alt="ArkWork Background"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[center_35%]"
+        />
+
           {/* Overlay gelap – ubah /30 jadi /20 (lebih terang) atau /40 (lebih gelap) */}
           <div className="absolute inset-0 bg-black/30" />
         </div>

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import lineClamp from "@tailwindcss/line-clamp";
 
 const config: Config = {
   darkMode: "class",
@@ -8,7 +9,7 @@ const config: Config = {
     "./src/hooks/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: { extend: {} },
-  plugins: [],
+  plugins: [lineClamp], // aktifkan plugin
 };
 
 export default config;

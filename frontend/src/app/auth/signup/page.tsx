@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // ✅ benar
+import Logo from '@/app/Images/Ungu__1_-removebg-preview.png'; // ✅ static import dari src/app/Images
 
 export default function SignUp() {
   const router = useRouter();
@@ -21,7 +23,6 @@ export default function SignUp() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // minimal password check
   const strong =
     pw.length >= 8 &&
     /[A-Z]/.test(pw) &&
@@ -69,7 +70,13 @@ export default function SignUp() {
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-xl">
           {/* Header */}
           <div className="px-6 pt-6 text-center">
-            <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 shadow" />
+            {/* ✅ Logo muncul karena static import */}
+            <Image
+              src={Logo}
+              alt="ArkWork Logo"  
+              className="mx-auto mb-3 h-16 w-auto"
+              priority
+            />
             <h1 className="text-xl font-semibold tracking-tight text-slate-900">
               Create your ArkWork account
             </h1>
@@ -120,7 +127,7 @@ export default function SignUp() {
                     value={pw}
                     onChange={(e) => setPw(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     placeholder="At least 8 chars, mix Aa1"
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-10 text-sm"
                     autoComplete="new-password"
@@ -135,17 +142,10 @@ export default function SignUp() {
                     {showPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                {/* strength hint */}
                 <div className="mt-1 flex items-center gap-2">
-                  <div
-                    className={`h-1 w-1/3 rounded ${pw.length >= 6 ? 'bg-amber-400' : 'bg-slate-200'}`}
-                  />
-                  <div
-                    className={`h-1 w-1/3 rounded ${pw.length >= 8 ? 'bg-amber-500' : 'bg-slate-200'}`}
-                  />
-                  <div
-                    className={`h-1 w-1/3 rounded ${strong ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                  />
+                  <div className={`h-1 w-1/3 rounded ${pw.length >= 6 ? 'bg-amber-400' : 'bg-slate-200'}`} />
+                  <div className={`h-1 w-1/3 rounded ${pw.length >= 8 ? 'bg-amber-500' : 'bg-slate-200'}`} />
+                  <div className={`h-1 w-1/3 rounded ${strong ? 'bg-emerald-500' : 'bg-slate-200'}`} />
                 </div>
               </label>
 
@@ -172,11 +172,7 @@ export default function SignUp() {
                   </button>
                 </div>
                 {confirm.length > 0 && (
-                  <p
-                    className={`mt-1 text-xs ${
-                      pw === confirm ? 'text-emerald-600' : 'text-rose-600'
-                    }`}
-                  >
+                  <p className={`mt-1 text-xs ${pw === confirm ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {pw === confirm ? 'Passwords match' : 'Passwords do not match'}
                   </p>
                 )}
@@ -190,14 +186,9 @@ export default function SignUp() {
                   className="h-4 w-4 rounded border-slate-300 text-blue-600"
                 />
                 I agree to the{' '}
-                <a href="#" className="text-blue-700 hover:underline">
-                  Terms
-                </a>{' '}
+                <a href="#" className="text-blue-700 hover:underline">Terms</a>{' '}
                 &{' '}
-                <a href="#" className="text-blue-700 hover:underline">
-                  Privacy
-                </a>
-                .
+                <a href="#" className="text-blue-700 hover:underline">Privacy</a>.
               </label>
 
               <button
@@ -243,7 +234,6 @@ export default function SignUp() {
               )}
             </button>
 
-            {/* Sign in link */}
             <p className="mt-6 text-center text-sm text-slate-600">
               Already have an account?{' '}
               <Link href="/auth/signin" className="font-medium text-blue-700 hover:underline">

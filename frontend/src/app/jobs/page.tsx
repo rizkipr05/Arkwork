@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 type Job = {
   id: number
@@ -33,6 +33,18 @@ export default function JobsPage() {
   const [saved, setSaved] = useState<number[]>([])
   const [sort, setSort] = useState<'newest'|'oldest'>('newest')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
+
+  // --- ukur tinggi filter utk spacer (mobile) ---
+  const filterRef = useRef<HTMLDivElement | null>(null)
+  const [filterH, setFilterH] = useState(0)
+  useEffect(() => {
+    const measure = () => {
+      if (filterRef.current) setFilterH(filterRef.current.offsetHeight || 0)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [filters, sort])
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('ark_jobs') ?? 'null')
@@ -72,13 +84,17 @@ export default function JobsPage() {
     <div className="min-h-screen bg-neutral-50">
       {/* Page header */}
       <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900">Find Your Next Role</h1>
-              <p className="text-neutral-600">Curated jobs across Oil & Gas, Renewables, and Mining.</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-neutral-900">
+                Find Your Next Role
+              </h1>
+              <p className="text-sm sm:text-base text-neutral-600">
+                Curated jobs across Oil &amp; Gas, Renewables, and Mining.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start md:self-auto">
               <label className="text-sm text-neutral-600">Sort</label>
               <select
                 value={sort}
@@ -93,10 +109,18 @@ export default function JobsPage() {
         </div>
       </header>
 
-      {/* Filters */}
-      <section className="border-b border-neutral-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-20 z-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
+      {/* Filters — fixed on mobile, sticky on desktop */}
+      <section
+        ref={filterRef}
+        className="
+          fixed inset-x-0 top-16 z-30   /* sesuaikan top-* dg tinggi navbar mobile */
+          border-b border-neutral-200
+          bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70
+          md:sticky md:top-[68px]       /* desktop sticky */
+        "
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-6">
             <Input
               placeholder="Keyword (role/company)…"
               value={filters.q}
@@ -136,13 +160,13 @@ export default function JobsPage() {
           </div>
 
           {/* Active filters bar */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-neutral-500">{filtered.length} results</span>
+          <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs sm:text-sm text-neutral-500">{filtered.length} results</span>
             {Object.entries(filters).map(([k, v]) =>
               v ? <Chip key={k} onClear={() => setFilters(s => ({ ...s, [k]: '' }))}>{labelize(k)}: {v}</Chip> : null
             )}
             {Object.values(filters).some(Boolean) && (
-              <button onClick={clearFilters} className="text-sm text-blue-700 hover:underline ml-1">
+              <button onClick={clearFilters} className="text-xs sm:text-sm text-blue-700 hover:underline ml-1">
                 Clear all
               </button>
             )}
@@ -150,37 +174,40 @@ export default function JobsPage() {
         </div>
       </section>
 
+      {/* Spacer for fixed filter (mobile only) */}
+      <div className="md:hidden" style={{ height: filterH }} />
+
       {/* Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6 lg:py-8">
         {filtered.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
             {/* List */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-5">
               {filtered.map(job => (
                 <article
                   key={job.id}
-                  className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+                  className="group rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm hover:shadow-md transition cursor-pointer"
                   onClick={() => {
                     setSelected(job)
                     setMobileDetailOpen(true)
                   }}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 grid place-items-center text-white font-bold">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 grid place-items-center text-white text-sm sm:text-base font-bold">
                       {initials(job.company || 'AW')}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="text-base md:text-lg font-semibold text-neutral-900 truncate">
+                      <div className="flex items-start justify-between gap-2 sm:gap-3">
+                        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-neutral-900 truncate">
                           {job.title}
                         </h3>
                         <button
                           onClick={(e)=>{ e.stopPropagation(); toggleSave(job.id) }}
                           aria-label="Save job"
                           className={[
-                            "shrink-0 rounded-lg border px-2.5 py-1 text-xs transition",
+                            "shrink-0 rounded-lg border px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs transition",
                             saved.includes(job.id)
                               ? "border-amber-500 bg-amber-50 text-amber-700"
                               : "border-neutral-300 hover:bg-neutral-50 text-neutral-700"
@@ -189,17 +216,17 @@ export default function JobsPage() {
                           {saved.includes(job.id) ? 'Saved' : 'Save'}
                         </button>
                       </div>
-                      <p className="text-sm text-neutral-600">{job.company || 'Company'}</p>
+                      <p className="text-xs sm:text-sm text-neutral-600">{job.company || 'Company'}</p>
 
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <Badge icon={<PinIcon className="h-3.5 w-3.5" />}>{job.location}</Badge>
                         <Badge tone="blue">{job.contract}</Badge>
                         <Badge tone="green">{job.industry}</Badge>
                         <Badge tone="violet">{job.remote}</Badge>
-                        <span className="ml-auto text-xs text-neutral-500">Posted: {job.posted}</span>
+                        <span className="ml-auto text-[11px] sm:text-xs text-neutral-500">Posted: {job.posted}</span>
                       </div>
 
-                      <p className="mt-3 line-clamp-2 text-sm text-neutral-600">
+                      <p className="mt-2 sm:mt-3 line-clamp-2 text-xs sm:text-sm text-neutral-600">
                         {job.description}
                       </p>
                     </div>
@@ -271,7 +298,7 @@ function Select({
 }: { value:string; onChange:(v:string)=>void; options:string[]; label:string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-neutral-500">{label}</span>
+      <span className="mb-1 hidden sm:block text-[11px] uppercase tracking-wide text-neutral-500">{label}</span>
       <select
         value={value}
         onChange={(e)=>onChange(e.target.value)}
@@ -322,14 +349,14 @@ function DetailPanel({
     )
   }
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sticky top-28">
+    <div className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm lg:sticky lg:top-28">
       <div className="flex items-start gap-3">
-        <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 grid place-items-center text-white font-bold">
+        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-amber-400 grid place-items-center text-white text-sm sm:text-base font-bold">
           {initials(job.company || 'AW')}
         </div>
         <div>
-          <h2 className="text-xl font-bold text-neutral-900">{job.title}</h2>
-          <p className="text-sm text-neutral-600">{job.company || 'Company'} • {job.location}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-900">{job.title}</h2>
+          <p className="text-xs sm:text-sm text-neutral-600">{job.company || 'Company'} • {job.location}</p>
         </div>
       </div>
 
@@ -342,9 +369,9 @@ function DetailPanel({
         <Info label="ID" value={String(job.id)} />
       </div>
 
-      <p className="mt-4 text-neutral-700">{job.description}</p>
+      <p className="mt-4 text-sm sm:text-base text-neutral-700">{job.description}</p>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-5 sm:mt-6 space-y-2">
         <button
           onClick={onApply}
           className="w-full rounded-xl bg-neutral-900 px-4 py-2.5 text-white hover:opacity-90"
@@ -375,7 +402,7 @@ function Info({ label, value }: { label:string; value:string }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
       <div className="text-[11px] uppercase tracking-wide text-neutral-500">{label}</div>
-      <div className="text-sm text-neutral-900">{value}</div>
+      <div className="text-sm text-neutral-900 break-words">{value}</div>
     </div>
   )
 }
@@ -383,9 +410,12 @@ function Info({ label, value }: { label:string; value:string }) {
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-2xl rounded-t-3xl bg-white p-5 shadow-2xl">
-        <div className="mb-2 flex items-center justify-between">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-2xl rounded-t-3xl bg-white shadow-2xl">
+        <div className="pt-3">
+          <div className="mx-auto h-1.5 w-10 rounded-full bg-neutral-200" />
+        </div>
+        <div className="flex items-center justify-between px-4 pb-2 pt-3">
           <div className="text-sm font-semibold text-neutral-800">Job details</div>
           <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-xl border border-neutral-200 hover:bg-neutral-50">
             <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -393,7 +423,9 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
             </svg>
           </button>
         </div>
-        {children}
+        <div className="max-h-[75vh] overflow-y-auto px-4 pb-5">
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -401,7 +433,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
 
 function EmptyState() {
   return (
-    <div className="rounded-3xl border border-dashed border-neutral-300 bg-white p-12 text-center">
+    <div className="rounded-3xl border border-dashed border-neutral-300 bg-white p-10 sm:p-12 text-center">
       <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-neutral-100 grid place-items-center">
         <SearchIcon className="h-6 w-6 text-neutral-600" />
       </div>

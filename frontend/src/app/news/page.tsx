@@ -9,7 +9,7 @@ export default function NewsPage() {
   const [error, setError] = useState<string | null>(null)
 
   // filters
-  const [scope, setScope] = useState<'id'|'global'|'both'>('id')
+  const [scope, setScope] = useState<'id' | 'global' | 'both'>('id')
   const [limit, setLimit] = useState(15)
   const [lang, setLang] = useState('id')
   const [country, setCountry] = useState('ID')
@@ -39,11 +39,23 @@ export default function NewsPage() {
     )
   }, [items, quick])
 
+  // helpers
+  const getDomain = (url?: string) => {
+    try {
+      if (!url) return ''
+      const u = new URL(url)
+      return u.hostname.replace(/^www\./, '')
+    } catch { return '' }
+  }
+  const summarize = (it: EnergyNewsItem) =>
+    (it.summary || it.description || '').replace(/\s+/g, ' ').trim()
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-brand-blue mb-6">Energy & Oil & Gas News</h1>
+        <h1 className="text-3xl font-bold text-brand-blue mb-6">Energy &amp; Oil &amp; Gas News</h1>
 
+        {/* Controls */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6 grid md:grid-cols-6 gap-3 md:gap-4">
           <select className="px-3 py-2 border rounded-lg focus:outline-none focus:border-brand-blue"
                   value={scope} onChange={e=>setScope(e.target.value as any)}>
@@ -96,43 +108,64 @@ export default function NewsPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((it, i) => (
-            <article key={`${it.link}-${i}`} className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden flex flex-col">
-              {it.image ? (
-                <a href={it.link} target="_blank" rel="noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={it.image} alt={it.title} className="w-full h-40 object-cover" />
-                </a>
-              ) : (
-                <div className="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-500">
-                  No Image
-                </div>
-              )}
+        {/* List style (no images) */}
+        <section className="bg-white rounded-xl shadow">
+          <div className="flex items-center justify-between px-5 py-4 border-b">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-brand-blue" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 3v2h3.59L7 15.59 8.41 17 19 6.41V10h2V3zM5 5h6V3H3v8h2z"/><path d="M19 19H5V8H3v13h18V10h-2z"/>
+              </svg>
+              <span className="font-semibold">Latest Industry News</span>
+            </div>
+            {quick && (
+              <button
+                onClick={()=>setQuick('')}
+                className="text-sm text-brand-blue hover:underline"
+              >
+                Clear Filter
+              </button>
+            )}
+          </div>
 
-              <div className="p-4 flex-1 flex flex-col">
+          {filtered.map((it, i) => (
+            <article key={`${it.link}-${i}`} className="px-5 md:px-6 py-5 border-b last:border-none">
+              {/* Title + source badge */}
+              <div className="flex items-start justify-between gap-3">
                 <a href={it.link} target="_blank" rel="noreferrer" className="hover:underline">
-                  <h3 className="text-lg font-semibold text-brand-blue line-clamp-3">{it.title}</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">
+                    {it.title}
+                  </h3>
                 </a>
-                <div className="mt-3 text-sm text-gray-600 flex items-center justify-between">
-                  <span>{it.source || 'Source'}</span>
-                  <time className="text-gray-500">{it.pubDate ? new Date(it.pubDate).toLocaleString() : ''}</time>
-                </div>
+                <span className="shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-xs text-gray-700">
+                  {it.source || getDomain(it.link) || 'Source'}
+                </span>
               </div>
 
-              <div className="p-4 pt-0">
+              {/* Summary */}
+              <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+                {summarize(it) || '…'}
+              </p>
+
+              {/* Footer: date + Read More */}
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <time className="text-gray-500">
+                  {it.pubDate ? new Date(it.pubDate).toLocaleDateString() : ''}
+                </time>
                 <a
                   href={it.link}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                  className="text-brand-blue hover:underline inline-flex items-center gap-1"
                 >
-                  Read Article
+                  Read More
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h6V3H3v8h2z"/>
+                  </svg>
                 </a>
               </div>
             </article>
           ))}
-        </div>
+        </section>
 
         {!loading && !error && filtered.length === 0 && (
           <p className="text-center text-gray-500 mt-10">No articles found.</p>

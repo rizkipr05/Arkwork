@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePathname } from 'next/navigation'
 
 // Static import agar logo selalu ter-bundle
-import ArkLogo from '@/app/Images/ArkWork.png'
+import ArkLogo from '@/app/Images/Ungu__1_-removebg-preview.png'
 
 export default function Nav() {
   const pathname = usePathname()
@@ -59,7 +59,7 @@ export default function Nav() {
             width={240}
             height={240}
             priority
-            className="w-auto h-14 md:h-16 object-contain"
+            className="w-auto h-20 md:h-20 object-contain"
           />
         </Link>
 

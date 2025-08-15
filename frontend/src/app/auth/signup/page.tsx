@@ -216,26 +216,6 @@ export default function SignUp() {
               <div className="h-[1px] flex-1 bg-slate-200" />
             </div>
 
-            {/* Google only */}
-            <button
-              type="button"
-              onClick={onGoogle}
-              disabled={googleBusy}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-60"
-            >
-              {googleBusy ? (
-                <span className="inline-flex items-center">
-                  <i className="fa-solid fa-spinner fa-spin mr-2" />
-                  Connecting…
-                </span>
-              ) : (
-                <span className="inline-flex items-center">
-                  <i className="fa-brands fa-google mr-2" />
-                  Continue with Google
-                </span>
-              )}
-            </button>
-
             <p className="mt-6 text-center text-sm text-slate-600">
               Already have an account?{' '}
               <Link href="/auth/signin" className="font-medium text-blue-700 hover:underline">

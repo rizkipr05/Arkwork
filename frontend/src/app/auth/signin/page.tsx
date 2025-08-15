@@ -76,29 +76,6 @@ export default function SignIn() {
             </p>
           </div>
 
-          {/* Demo helper */}
-          <div className="mx-6 mt-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-medium text-blue-900">Demo Account</div>
-                <div className="mt-1 space-y-0.5 text-blue-800/90">
-                  <div>
-                    <span className="opacity-70">Email:</span> demo@arkwork.com
-                  </div>
-                  <div>
-                    <span className="opacity-70">Password:</span> demo123
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={useDemo}
-                className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                Use Demo
-              </button>
-            </div>
-          </div>
 
           {/* Error */}
           {error && (
@@ -182,25 +159,6 @@ export default function SignIn() {
               <span className="px-3 text-xs uppercase tracking-wider text-slate-400">or</span>
               <div className="h-[1px] flex-1 bg-slate-200" />
             </div>
-
-            {/* Google only */}
-            <button
-              onClick={handleSocialGoogle}
-              disabled={!!loading}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-60"
-            >
-              {loading === 'google' ? (
-                <span className="inline-flex items-center">
-                  <i className="fa-solid fa-spinner fa-spin mr-2" />
-                  Connecting…
-                </span>
-              ) : (
-                <span className="inline-flex items-center">
-                  <i className="fa-brands fa-google mr-2" />
-                  Continue with Google
-                </span>
-              )}
-            </button>
 
             {/* Sign up link */}
             <p className="mt-6 text-center text-sm text-slate-600">

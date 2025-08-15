@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-type Msg = { id: string; role: "user" | "assistant"; text: string; ts: number };
+/* ===================== Types ===================== */
+type Msg = { id: string; role: 'user' | 'assistant'; text: string; ts: number };
 type Profile = {
   name?: string;
   role?: string;
@@ -12,105 +13,127 @@ type Profile = {
   interests?: string;
 };
 
-const STORAGE_KEY = "ogm-chat-history-v1";
-const PROFILE_KEY = "ogm-chat-profile-v1";
-const CHAT_API = "/api/chat";
+/* ===================== Consts ===================== */
+const STORAGE_KEY = 'ogm-chat-history-v1';
+const PROFILE_KEY = 'ogm-chat-profile-v1';
 
+/**
+ * By default we hit /api/chat (create it on your side).
+ * You can override via prop <ChatbotWidget chatApi="/api/arkwork/agent" />
+ */
+const DEFAULT_CHAT_API = '/api/chat';
+
+/* ===================== Utils ===================== */
 function formatTime(ts: number) {
   const d = new Date(ts);
-  return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+function rid() {
+  // small fallback for older browsers without crypto.randomUUID
+  // (Next.js app router targets modern browsers, but just in case)
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-export default function ChatbotWidget() {
+/* ==================================================
+   Component
+   ================================================== */
+export default function ChatbotWidget({ chatApi = DEFAULT_CHAT_API }: { chatApi?: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [intent, setIntent] = useState<"news" | "jobs" | "consult">("news");
+  const [intent, setIntent] = useState<'news' | 'jobs' | 'consult'>('news');
   const [profile, setProfile] = useState<Profile>({});
   const [showProfile, setShowProfile] = useState(false);
 
   const listRef = useRef<HTMLDivElement>(null);
 
-  // load history & profile
+  /* ---------- load history & profile ---------- */
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setMsgs(JSON.parse(raw));
       const p = localStorage.getItem(PROFILE_KEY);
       if (p) setProfile(JSON.parse(p));
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, []);
 
-  // save history & profile
+  /* ---------- save history & profile ---------- */
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
     } catch {}
   }, [msgs]);
+
   useEffect(() => {
     try {
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     } catch {}
   }, [profile]);
 
-  // auto scroll
+  /* ---------- auto scroll ---------- */
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [msgs, open, busy]);
 
+  /* ---------- prompt suggestions ---------- */
   const suggestions = useMemo(() => {
-    if (intent === "jobs")
+    if (intent === 'jobs')
       return [
-        "Rekomendasikan role migas untuk operator kilang 2 tahun di Balikpapan",
-        "Skill apa agar masuk tim HSE di LNG?",
-        "Sertifikasi wajib untuk field engineer?",
+        'Rekomendasikan role migas untuk operator kilang 2 tahun di Balikpapan',
+        'Skill apa agar masuk tim HSE di LNG?',
+        'Sertifikasi wajib untuk field engineer?',
       ];
-    if (intent === "consult")
+    if (intent === 'consult')
       return [
-        "Saya ingin pindah dari operator ke planner—langkahnya?",
-        "Bikin roadmap 90 hari belajar analytics produksi",
-        "Bagaimana persiapan wawancara teknis kilang?",
+        'Saya ingin pindah dari operator ke planner—langkahnya?',
+        'Bikin roadmap 90 hari belajar analytics produksi',
+        'Bagaimana persiapan wawancara teknis kilang?',
       ];
-    return [
-      "Ringkas berita migas hari ini",
-      "Apa itu upstream & downstream?",
-      "Berita LNG Indonesia terbaru",
-    ];
+    return ['Ringkas berita migas hari ini', 'Apa itu upstream & downstream?', 'Berita LNG Indonesia terbaru'];
   }, [intent]);
 
+  /* ---------- ask API ---------- */
   async function ask(text: string) {
     if (!text.trim() || busy) return;
-    const u: Msg = { id: crypto.randomUUID(), role: "user", text: text.trim(), ts: Date.now() };
+    const u: Msg = { id: rid(), role: 'user', text: text.trim(), ts: Date.now() };
     setMsgs((m) => [...m, u]);
-    setInput("");
+    setInput('');
     setBusy(true);
 
     try {
-      const res = await fetch(CHAT_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(chatApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           intent,
           profile,
           messages: [
             ...msgs.map(({ role, text }) => ({ role, content: text })),
-            { role: "user", content: text.trim() },
+            { role: 'user', content: text.trim() },
           ],
         }),
       });
-      const data = await res.json();
-      const reply =
-        (res.ok && (data.answer || data.message)) ||
-        "⚠️ Server tidak mengembalikan jawaban.";
 
-      const a: Msg = { id: crypto.randomUUID(), role: "assistant", text: reply, ts: Date.now() };
+      let reply = '⚠️ Server tidak mengembalikan jawaban.';
+      try {
+        const data = await res.json();
+        reply = (res.ok && (data.answer || data.message)) || reply;
+      } catch {
+        // non‑JSON response
+      }
+
+      const a: Msg = { id: rid(), role: 'assistant', text: reply, ts: Date.now() };
       setMsgs((m) => [...m, a]);
-    } catch (e) {
+    } catch {
       const a: Msg = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        text: "⚠️ Gagal terhubung ke ArkWork Agent.",
+        id: rid(),
+        role: 'assistant',
+        text: '⚠️ Gagal terhubung ke ArkWork Agent.',
         ts: Date.now(),
       };
       setMsgs((m) => [...m, a]);
@@ -124,15 +147,15 @@ export default function ChatbotWidget() {
     ask(input);
   }
 
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* FAB Robot ArkWork */}
+      {/* Floating Action Button */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Buka ArkWork Agent"
         className="fixed bottom-5 right-5 z-50 rounded-full h-14 w-14 shadow-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:scale-[1.03] transition grid place-items-center"
       >
-        {/* Ikon robot */}
         <svg viewBox="0 0 24 24" className="h-7 w-7">
           <path d="M12 2v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <rect x="4" y="6" width="16" height="12" rx="4" ry="4" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -184,9 +207,9 @@ export default function ChatbotWidget() {
           {/* Mode chips */}
           <div className="px-3 py-2 flex gap-2 border-b border-neutral-200 dark:border-neutral-800">
             {[
-              { k: "news", label: "Berita" },
-              { k: "jobs", label: "Kerja" },
-              { k: "consult", label: "Konsultasi" },
+              { k: 'news', label: 'Berita' },
+              { k: 'jobs', label: 'Kerja' },
+              { k: 'consult', label: 'Konsultasi' },
             ].map((m) => {
               const active = intent === (m.k as any);
               return (
@@ -194,11 +217,11 @@ export default function ChatbotWidget() {
                   key={m.k}
                   onClick={() => setIntent(m.k as any)}
                   className={[
-                    "px-3 py-1.5 rounded-full text-xs border transition",
+                    'px-3 py-1.5 rounded-full text-xs border transition',
                     active
-                      ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent"
-                      : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                  ].join(" ")}
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent'
+                      : 'border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800',
+                  ].join(' ')}
                 >
                   {m.label}
                 </button>
@@ -225,23 +248,17 @@ export default function ChatbotWidget() {
               </div>
             ) : (
               msgs.map((m) => (
-                <div
-                  key={m.id}
-                  className={[
-                    "flex items-end gap-2",
-                    m.role === "user" ? "justify-end" : "justify-start",
-                  ].join(" ")}
-                >
-                  {m.role === "assistant" && (
+                <div key={m.id} className={['flex items-end gap-2', m.role === 'user' ? 'justify-end' : 'justify-start'].join(' ')}>
+                  {m.role === 'assistant' && (
                     <div className="h-7 w-7 shrink-0 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500" />
                   )}
                   <div
                     className={[
-                      "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                      m.role === "user"
-                        ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100",
-                    ].join(" ")}
+                      'max-w-[80%] rounded-2xl px-3 py-2 text-sm',
+                      m.role === 'user'
+                        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100',
+                    ].join(' ')}
                   >
                     <div className="whitespace-pre-wrap">{m.text}</div>
                     <div className="mt-1 text-[10px] opacity-60 text-right">{formatTime(m.ts)}</div>
@@ -267,11 +284,11 @@ export default function ChatbotWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
-                  intent === "jobs"
-                    ? "Tanya role/skills/sertifikasi…"
-                    : intent === "consult"
-                    ? "Ceritakan situasi/tujuanmu…"
-                    : "Tanya berita/konteks migas…"
+                  intent === 'jobs'
+                    ? 'Tanya role/skills/sertifikasi…'
+                    : intent === 'consult'
+                    ? 'Ceritakan situasi/tujuanmu…'
+                    : 'Tanya berita/konteks migas…'
                 }
                 className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
               />
@@ -286,7 +303,7 @@ export default function ChatbotWidget() {
         </div>
       )}
 
-      {/* Panel Profil */}
+      {/* Profile Sheet */}
       {open && showProfile && (
         <ProfileSheet
           profile={profile}
@@ -301,7 +318,7 @@ export default function ChatbotWidget() {
   );
 }
 
-/* ==== Profil Sheet (mini form) ==== */
+/* ===================== Profile Sheet ===================== */
 function ProfileSheet({
   profile,
   onClose,
@@ -326,27 +343,24 @@ function ProfileSheet({
         </div>
 
         <div className="space-y-3">
-          <Input label="Nama (opsional)" value={form.name || ""} onChange={(v) => setForm({ ...form, name: v })} />
-          <Input label="Role saat ini" value={form.role || ""} onChange={(v) => setForm({ ...form, role: v })} />
-          <Input label="Skills utama" value={form.skills || ""} onChange={(v) => setForm({ ...form, skills: v })} />
-          <Input label="Lokasi" value={form.location || ""} onChange={(v) => setForm({ ...form, location: v })} />
+          <Input label="Nama (opsional)" value={form.name || ''} onChange={(v) => setForm({ ...form, name: v })} />
+          <Input label="Role saat ini" value={form.role || ''} onChange={(v) => setForm({ ...form, role: v })} />
+          <Input label="Skills utama" value={form.skills || ''} onChange={(v) => setForm({ ...form, skills: v })} />
+          <Input label="Lokasi" value={form.location || ''} onChange={(v) => setForm({ ...form, location: v })} />
           <Input
             label="Pengalaman (tahun)"
-            value={String(form.experienceYears ?? "")}
+            value={String(form.experienceYears ?? '')}
             onChange={(v) => setForm({ ...form, experienceYears: v ? Number(v) : undefined })}
             type="number"
           />
-          <Input label="Minat/target" value={form.interests || ""} onChange={(v) => setForm({ ...form, interests: v })} />
+          <Input label="Minat/target" value={form.interests || ''} onChange={(v) => setForm({ ...form, interests: v })} />
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={onClose} className="px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700">
             Batal
           </button>
-          <button
-            onClick={() => onSave(form)}
-            className="px-3 py-2 text-sm rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-          >
+          <button onClick={() => onSave(form)} className="px-3 py-2 text-sm rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900">
             Simpan
           </button>
         </div>
@@ -355,11 +369,12 @@ function ProfileSheet({
   );
 }
 
+/* ===================== Small Input ===================== */
 function Input({
   label,
   value,
   onChange,
-  type = "text",
+  type = 'text',
 }: {
   label: string;
   value: string;

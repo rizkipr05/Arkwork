@@ -73,7 +73,7 @@ export default function Nav() {
             width={240}
             height={240}
             priority
-            className="w-auto h-20 md:h-20 object-contain"
+            className="w-auto h-20 md:h-25 object-contain"
           />
         </Link>
 

@@ -1,16 +1,18 @@
-import {useState} from 'react';
-import {useAuth} from '@/hooks/useAuth';
-import Link from 'next/link';
-import {useRouter} from 'next/navigation';
-import Image from 'next/image';
-import {useTranslations} from 'next-intl';
+'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+
+import { useAuth } from '@/hooks/useAuth';
 import Logo from '@/app/Images/Ungu__1_-removebg-preview.png';
 
 export default function SignUp() {
   const t = useTranslations('signup');
   const router = useRouter();
-  const {signup, social} = useAuth();
+  const { signup, social } = useAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,10 +26,13 @@ export default function SignUp() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const strong = pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+  const strong =
+    pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy) return; // cegah double submit
+
     if (!agree) {
       setError(t('error.agree'));
       return;
@@ -36,26 +41,32 @@ export default function SignUp() {
       setError(t('error.mismatch'));
       return;
     }
-    setBusy(true);
-    setError(null);
+
     try {
+      setBusy(true);
+      setError(null);
       await signup(name.trim(), email.trim(), pw);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err?.message || t('error.default'));
+    } catch (err: unknown) {
+      const message =
+        (err as { message?: string })?.message ?? t('error.default');
+      setError(message);
     } finally {
       setBusy(false);
     }
   }
 
   async function onGoogle() {
+    if (googleBusy) return;
     try {
       setGoogleBusy(true);
       setError(null);
       await social('google', 'signup');
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err?.message || t('error.google'));
+    } catch (err: unknown) {
+      const message =
+        (err as { message?: string })?.message ?? t('error.google');
+      setError(message);
     } finally {
       setGoogleBusy(false);
     }
@@ -78,34 +89,41 @@ export default function SignUp() {
             <h1 className="text-xl font-semibold tracking-tight text-slate-900">
               {t('title')}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              {t('subtitle')}
-            </p>
+            <p className="mt-1 text-sm text-slate-600">{t('subtitle')}</p>
           </div>
 
           {/* Error box */}
           {error && (
-            <div className="mx-6 mt-4 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div
+              className="mx-6 mt-4 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={onSubmit} className="px-6 pb-6 pt-4">
+          <form onSubmit={onSubmit} className="px-6 pb-6 pt-4" noValidate>
             <div className="space-y-4">
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">{t('form.name')}</span>
+                <span className="mb-1 block text-xs text-slate-600">
+                  {t('form.name')}
+                </span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder={t('placeholder.name')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  autoComplete="name"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">{t('form.email')}</span>
+                <span className="mb-1 block text-xs text-slate-600">
+                  {t('form.email')}
+                </span>
                 <input
                   type="email"
                   value={email}
@@ -114,11 +132,14 @@ export default function SignUp() {
                   autoComplete="email"
                   placeholder={t('placeholder.email')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  inputMode="email"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">{t('form.password')}</span>
+                <span className="mb-1 block text-xs text-slate-600">
+                  {t('form.password')}
+                </span>
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
@@ -140,15 +161,29 @@ export default function SignUp() {
                     {showPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <div className={`h-1 w-1/3 rounded ${pw.length >= 6 ? 'bg-amber-400' : 'bg-slate-200'}`} />
-                  <div className={`h-1 w-1/3 rounded ${pw.length >= 8 ? 'bg-amber-500' : 'bg-slate-200'}`} />
-                  <div className={`h-1 w-1/3 rounded ${strong ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                <div className="mt-1 flex items-center gap-2" aria-hidden="true">
+                  <div
+                    className={`h-1 w-1/3 rounded ${
+                      pw.length >= 6 ? 'bg-amber-400' : 'bg-slate-200'
+                    }`}
+                  />
+                  <div
+                    className={`h-1 w-1/3 rounded ${
+                      pw.length >= 8 ? 'bg-amber-500' : 'bg-slate-200'
+                    }`}
+                  />
+                  <div
+                    className={`h-1 w-1/3 rounded ${
+                      strong ? 'bg-emerald-500' : 'bg-slate-200'
+                    }`}
+                  />
                 </div>
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">{t('form.confirm')}</span>
+                <span className="mb-1 block text-xs text-slate-600">
+                  {t('form.confirm')}
+                </span>
                 <div className="relative">
                   <input
                     type={showConfirm ? 'text' : 'password'}
@@ -170,7 +205,13 @@ export default function SignUp() {
                   </button>
                 </div>
                 {confirm.length > 0 && (
-                  <p className={`mt-1 text-xs ${pw === confirm ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <p
+                    className={`mt-1 text-xs ${
+                      pw === confirm ? 'text-emerald-600' : 'text-rose-600'
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                  >
                     {pw === confirm ? t('match.ok') : t('match.no')}
                   </p>
                 )}
@@ -184,9 +225,14 @@ export default function SignUp() {
                   className="h-4 w-4 rounded border-slate-300 text-blue-600"
                 />
                 {t('agree.1')}{' '}
-                <a href="#" className="text-blue-700 hover:underline">{t('agree.terms')}</a>{' '}
+                <a href="#" className="text-blue-700 hover:underline">
+                  {t('agree.terms')}
+                </a>{' '}
                 {t('agree.and')}{' '}
-                <a href="#" className="text-blue-700 hover:underline">{t('agree.privacy')}</a>.
+                <a href="#" className="text-blue-700 hover:underline">
+                  {t('agree.privacy')}
+                </a>
+                .
               </label>
 
               <button
@@ -214,7 +260,8 @@ export default function SignUp() {
               <div className="h-[1px] flex-1 bg-slate-200" />
             </div>
 
-            {/* Google
+            {/* Google (aktifkan bila siap) */}
+            {/* 
             <button
               type="button"
               onClick={onGoogle}
@@ -226,7 +273,7 @@ export default function SignUp() {
                   <i className="fa-solid fa-spinner fa-spin mr-2" />
                   {t('creating')}
                 </>
-              ) : ( 
+              ) : (
                 <>
                   <Image
                     src="/google-icon.svg"
@@ -238,11 +285,15 @@ export default function SignUp() {
                   {t('google')}
                 </>
               )}
-            </button> */}
+            </button>
+            */}
 
             <p className="mt-6 text-center text-sm text-slate-600">
               {t('haveAccount')}{' '}
-              <Link href="/auth/signin" className="font-medium text-blue-700 hover:underline">
+              <Link
+                href="/auth/signin"
+                className="font-medium text-blue-700 hover:underline"
+              >
                 {t('signIn')}
               </Link>
             </p>

@@ -114,7 +114,268 @@
       "desc": "Whether you are a professional seeking new opportunities or a company looking to hire top talent, ArkWork is the right place to start.",
       "cta": "Explore Opportunities"
     }
+  },
+
+
+
+  "Halaman-sigin": {},
+
+  "signin": {
+    "title": "Sign in to ArkWork",
+    "subtitle": "Welcome back! Please enter your details.",
+    "form": {
+      "email": "Email",
+      "password": "Password",
+      "togglePw": "Toggle password visibility",
+      "remember": "Remember me",
+      "forgot": "Forgot password?",
+      "signInBtn": "Sign In",
+      "signingIn": "Signing in..."
+    },
+    "googleBtn": "Sign in with Google",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "or": "or",
+    "error": {
+      "default": "Failed to sign in. Please check your credentials.",
+      "google": "Failed to sign in with Google."
+    }
+  },
+
+
+
+  "Halaman-signup": {},
+
+  "signup": {
+    "title": "Create your ArkWork account",
+    "subtitle": "It’s fast and free. Start your energy career journey.",
+    "form": {
+      "name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirm": "Confirm Password",
+      "togglePw": "Toggle password visibility",
+      "toggleConfirm": "Toggle confirm password visibility"
+    },
+    "placeholder": {
+      "name": "Jane Doe",
+      "email": "you@example.com",
+      "password": "At least 8 chars, mix Aa1",
+      "confirm": "Re-enter your password"
+    },
+    "agree": {
+      "1": "I agree to the",
+      "terms": "Terms",
+      "and": "and",
+      "privacy": "Privacy"
+    },
+    "createBtn": "Create Account",
+    "creating": "Creating account…",
+    "or": "or",
+    "google": "Continue with Google",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "match": {
+      "ok": "Passwords match",
+      "no": "Passwords do not match"
+    },
+    "error": {
+      "agree": "Please agree to the Terms & Privacy.",
+      "mismatch": "Passwords do not match.",
+      "default": "Failed to sign up. Please try again.",
+      "google": "Failed to continue with Google."
+    }
+  },
+
+
+  "Halaman-dashboard": {},
+
+  "dashboard": {
+    "greeting": "Hi, {name}!",
+    "fallback": { "there": "there", "job": "Job" },
+    "profile": {
+      "title": "My Profile",
+      "desc": "Complete your profile to get better job recommendations",
+      "cta": "Edit Profile"
+    },
+    "recent": {
+      "title": "Recent Activity",
+      "empty": "No activity yet",
+      "item": "Applied to {title} — {date}",
+      "viewAll": "View All"
+    }
+  },
+
+
+  "Halaman-jobs": {},
+
+  "jobs": {
+    "heading": "Browse Jobs",
+    "subheading": "Energy, Renewables, Mining — curated roles for professionals.",
+    "search": { "placeholder": "Search role / company…" },
+    "sort": { "label": "Sort", "newest": "Newest first", "oldest": "Oldest first" },
+    "filters": {
+      "title": "Filters",
+      "location": "Location",
+      "industry": "Industry",
+      "contract": "Contract",
+      "function": "Function",
+      "workmode": "Work mode",
+      "results": "{count} results",
+      "clear": "Clear all",
+      "all": "All {label}",
+      "placeholder": "Filter {label}…"
+    },
+    "common": {
+      "company": "Company",
+      "save": "Save",
+      "saved": "Saved",
+      "view": "View details",
+      "posted": "Posted {date}"
+    },
+    "empty": { "title": "No jobs found", "desc": "Try adjusting filters or keywords." },
+    "detail": {
+      "empty": "Select a job to see details",
+      "industry": "Industry",
+      "contract": "Contract",
+      "function": "Function",
+      "workmode": "Work mode",
+      "posted": "Posted",
+      "id": "ID",
+      "apply": "Apply Now",
+      "saveJob": "Save Job"
+    },
+    "apply": {
+      "needLogin": "Please sign in to apply.",
+      "dup": "You already applied to this job!",
+      "ok": "Application submitted!"
+    }
+  },
+
+  "Halaman-newa": {},
+
+  "news": {
+    "title": "Energy & Oil & Gas News",
+    "latest": "Latest Industry News",
+    "readMore": "Read More",
+    "empty": "No articles found.",
+    "error": { "load": "Failed to load news" },
+
+    "scope": {
+      "id": "Scope: Indonesia",
+      "global": "Scope: Global",
+      "both": "Scope: Both"
+    },
+    "lang": { "id": "Lang: ID", "en": "Lang: EN" },
+    "country": { "id": "Country: ID", "us": "Country: US" },
+    "limit": { "n": "Limit: {n}" },
+
+    "keywords": { "placeholder": "Custom keywords (optional)" },
+    "btn": { "fetch": "Fetch News", "loading": "Loading…" },
+    "quick": { "placeholder": "Quick filter by title/source…", "clear": "Clear Filter" },
+    "source": { "unknown": "Source" }
+  },
+
+  "Halaman-profile": {},
+
+  "profile": {
+    "title": "My Profile",
+    "fields": {
+      "name": "Full Name",
+      "email": "Email",
+      "location": "Location",
+      "phone": "Phone",
+      "skills": "Skills (comma-separated)",
+      "cv": "Upload CV"
+    },
+    "ph": {
+      "name": "Jane Doe",
+      "location": "e.g. Jakarta, ID",
+      "phone": "e.g. +62 812xxxxxxx",
+      "skills": "engineering, offshore, HSE"
+    },
+    "actions": {
+      "save": "Save Profile",
+      "download": "Download"
+    },
+    "toast": {
+      "saved": "Profile updated!",
+      "notFound": "User not found in local data.",
+      "failed": "Failed to save profile."
+    }
+  },
+
+  "Halaman-tenders": {},
+
+  "tenders": {
+    "title": "Browse Tenders",
+    "subtitle": "Project & procurement opportunities for multi-team collaboration.",
+    "ph": { "search": "Search title / buyer…" },
+    "sort": {
+      "label": "Sort",
+      "nearest": "Nearest deadline",
+      "farthest": "Farthest deadline"
+    },
+    "filters": {
+      "title": "Filters",
+      "location": "Location",
+      "sector": "Sector",
+      "status": "Status",
+      "contract": "Contract",
+      "all": "All {what}",
+      "clear": "Clear all",
+      "ph": { "location": "Filter location…" }
+    },
+    "enums": {
+      "sector": {
+        "Oil & Gas": "Oil & Gas",
+        "Renewable Energy": "Renewable Energy",
+        "Utilities": "Utilities",
+        "Engineering": "Engineering"
+      },
+      "status": {
+        "Open": "Open",
+        "Prequalification": "Prequalification",
+        "Closed": "Closed"
+      },
+      "contract": {
+        "EPC": "EPC",
+        "Supply": "Supply",
+        "Consulting": "Consulting",
+        "Maintenance": "Maintenance"
+      }
+    },
+    "labels": {
+      "budget": "Budget",
+      "teamSlots": "Team slots",
+      "teamN": "{n} teams",
+      "sector": "Sector",
+      "contract": "Contract",
+      "status": "Status",
+      "deadline": "Deadline"
+    },
+    "btn": {
+      "save": "Save",
+      "saved": "Saved",
+      "view": "View details",
+      "participate": "Participate",
+      "saveTender": "Save Tender"
+    },
+    "docs": {
+      "title": "Documents",
+      "none": "No documents"
+    },
+    "deadline": {
+      "closed": "Submissions closed",
+      "today": "Due today",
+      "left": "{n} day{n, plural, one {} other {s}} left"
+    },
+    "detail": { "empty": "Select a tender to see details" },
+    "empty": { "title": "No tenders found", "desc": "Try adjusting filters or keywords." },
+    "results": "{count} results",
+    "participate": { "alert": "Interested to participate: {title}\nPlease upload your documents in the next step." }
   }
+
 
 
   

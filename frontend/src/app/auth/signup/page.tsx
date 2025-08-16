@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import {useState} from 'react';
+import {useAuth} from '@/hooks/useAuth';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image'; // ✅ benar
-import Logo from '@/app/Images/Ungu__1_-removebg-preview.png'; // ✅ static import dari src/app/Images
+import {useRouter} from 'next/navigation';
+import Image from 'next/image';
+import {useTranslations} from 'next-intl';
+
+import Logo from '@/app/Images/Ungu__1_-removebg-preview.png';
 
 export default function SignUp() {
+  const t = useTranslations('signup');
   const router = useRouter();
-  const { signup, social } = useAuth();
+  const {signup, social} = useAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,20 +26,16 @@ export default function SignUp() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const strong =
-    pw.length >= 8 &&
-    /[A-Z]/.test(pw) &&
-    /[a-z]/.test(pw) &&
-    /[0-9]/.test(pw);
+  const strong = pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!agree) {
-      setError('Please agree to the Terms & Privacy.');
+      setError(t('error.agree'));
       return;
     }
     if (pw !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('error.mismatch'));
       return;
     }
     setBusy(true);
@@ -45,7 +44,7 @@ export default function SignUp() {
       await signup(name.trim(), email.trim(), pw);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err?.message || 'Failed to sign up. Please try again.');
+      setError(err?.message || t('error.default'));
     } finally {
       setBusy(false);
     }
@@ -58,7 +57,7 @@ export default function SignUp() {
       await social('google', 'signup');
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err?.message || 'Failed to continue with Google.');
+      setError(err?.message || t('error.google'));
     } finally {
       setGoogleBusy(false);
     }
@@ -70,20 +69,19 @@ export default function SignUp() {
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-xl">
           {/* Header */}
           <div className="px-6 pt-6 text-center">
-            {/* ✅ Logo muncul karena static import */}
             <Image
               src={Logo}
-              alt="ArkWork Logo"  
+              alt="ArkWork Logo"
               width={100}
               height={100}
-              className="mx-auto mb-30 h-50 w-50 object-contain"
+              className="mx-auto mb-6 h-20 w-20 object-contain"
               priority
             />
             <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-              Create your ArkWork account
+              {t('title')}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              It’s fast and free. Start your energy career journey.
+              {t('subtitle')}
             </p>
           </div>
 
@@ -98,31 +96,31 @@ export default function SignUp() {
           <form onSubmit={onSubmit} className="px-6 pb-6 pt-4">
             <div className="space-y-4">
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Full Name</span>
+                <span className="mb-1 block text-xs text-slate-600">{t('form.name')}</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="Jane Doe"
+                  placeholder={t('placeholder.name')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Email</span>
+                <span className="mb-1 block text-xs text-slate-600">{t('form.email')}</span>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder={t('placeholder.email')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Password</span>
+                <span className="mb-1 block text-xs text-slate-600">{t('form.password')}</span>
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
@@ -130,7 +128,7 @@ export default function SignUp() {
                     onChange={(e) => setPw(e.target.value)}
                     required
                     minLength={8}
-                    placeholder="At least 8 chars, mix Aa1"
+                    placeholder={t('placeholder.password')}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-10 text-sm"
                     autoComplete="new-password"
                   />
@@ -139,7 +137,7 @@ export default function SignUp() {
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute inset-y-0 right-0 grid w-10 place-items-center text-slate-500 hover:text-slate-700"
                     tabIndex={-1}
-                    aria-label="Toggle password visibility"
+                    aria-label={t('form.togglePw')}
                   >
                     {showPw ? '🙈' : '👁️'}
                   </button>
@@ -152,14 +150,14 @@ export default function SignUp() {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs text-slate-600">Confirm Password</span>
+                <span className="mb-1 block text-xs text-slate-600">{t('form.confirm')}</span>
                 <div className="relative">
                   <input
                     type={showConfirm ? 'text' : 'password'}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     required
-                    placeholder="Re-enter your password"
+                    placeholder={t('placeholder.confirm')}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-10 text-sm"
                     autoComplete="new-password"
                   />
@@ -168,14 +166,14 @@ export default function SignUp() {
                     onClick={() => setShowConfirm((v) => !v)}
                     className="absolute inset-y-0 right-0 grid w-10 place-items-center text-slate-500 hover:text-slate-700"
                     tabIndex={-1}
-                    aria-label="Toggle confirm password visibility"
+                    aria-label={t('form.toggleConfirm')}
                   >
                     {showConfirm ? '🙈' : '👁️'}
                   </button>
                 </div>
                 {confirm.length > 0 && (
                   <p className={`mt-1 text-xs ${pw === confirm ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {pw === confirm ? 'Passwords match' : 'Passwords do not match'}
+                    {pw === confirm ? t('match.ok') : t('match.no')}
                   </p>
                 )}
               </label>
@@ -187,10 +185,10 @@ export default function SignUp() {
                   onChange={(e) => setAgree(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-300 text-blue-600"
                 />
-                I agree to the{' '}
-                <a href="#" className="text-blue-700 hover:underline">Terms</a>{' '}
-                &{' '}
-                <a href="#" className="text-blue-700 hover:underline">Privacy</a>.
+                {t('agree.1')}{' '}
+                <a href="#" className="text-blue-700 hover:underline">{t('agree.terms')}</a>{' '}
+                {t('agree.and')}{' '}
+                <a href="#" className="text-blue-700 hover:underline">{t('agree.privacy')}</a>.
               </label>
 
               <button
@@ -201,10 +199,10 @@ export default function SignUp() {
                 {busy ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin mr-2" />
-                    Creating account…
+                    {t('creating')}
                   </>
                 ) : (
-                  'Create Account'
+                  t('createBtn')
                 )}
               </button>
             </div>
@@ -212,14 +210,42 @@ export default function SignUp() {
             {/* Divider */}
             <div className="my-6 flex items-center">
               <div className="h-[1px] flex-1 bg-slate-200" />
-              <span className="px-3 text-xs uppercase tracking-wider text-slate-400">or</span>
+              <span className="px-3 text-xs uppercase tracking-wider text-slate-400">
+                {t('or')}
+              </span>
               <div className="h-[1px] flex-1 bg-slate-200" />
             </div>
 
+            {/* Google
+            <button
+              type="button"
+              onClick={onGoogle}
+              disabled={googleBusy}
+              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium shadow hover:bg-slate-50 disabled:opacity-60"
+            >
+              {googleBusy ? (
+                <>
+                  <i className="fa-solid fa-spinner fa-spin mr-2" />
+                  {t('creating')}
+                </>
+              ) : ( 
+                <>
+                  <Image
+                    src="/google-icon.svg"
+                    alt="Google"
+                    width={18}
+                    height={18}
+                    className="mr-2"
+                  />
+                  {t('google')}
+                </>
+              )}
+            </button> */}
+
             <p className="mt-6 text-center text-sm text-slate-600">
-              Already have an account?{' '}
+              {t('haveAccount')}{' '}
               <Link href="/auth/signin" className="font-medium text-blue-700 hover:underline">
-                Sign in
+                {t('signIn')}
               </Link>
             </p>
           </form>

@@ -123,7 +123,7 @@ export default function Nav() {
                 {t('auth.signIn')}
               </Link>
               <Link
-                href="/auth/signup_perushaaan"
+                href="/auth/signup_perusahaan"
                 className="inline-flex items-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
               >
                 {t('auth.signUp')}
@@ -135,7 +135,7 @@ export default function Nav() {
               <button
                 id="avatarBtn"
                 onClick={() => setMenuOpen((v) => !v)}
-                aria-haspopup="menu"           
+                aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label={t('menu.user')}
                 className="flex items-center gap-2 rounded-2xl border border-neutral-200 px-2 py-1.5 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
@@ -299,7 +299,7 @@ export default function Nav() {
                     {t('auth.signIn')}
                   </Link>
                   <Link
-                    href="/auth/signup_perushaan"
+                    href="/auth/signup_perusahaan"
                     onClick={() => setOpen(false)}
                     className="rounded-xl bg-amber-500 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-amber-600"
                   >

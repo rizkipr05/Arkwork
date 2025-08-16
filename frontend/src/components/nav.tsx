@@ -1,12 +1,12 @@
+// src/components/nav.tsx (atau lokasi Nav kamu)
 'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 
 // Static import agar logo selalu ter-bundle
 import ArkLogo from '@/app/Images/Ungu__1_-removebg-preview.png'
@@ -22,7 +22,10 @@ export default function Nav() {
 
   const [open, setOpen] = useState(false)          // mobile drawer
   const [menuOpen, setMenuOpen] = useState(false)  // avatar dropdown
-  const { user, logout } = useAuth()
+
+  // ⬇️ gunakan API baru dari useAuth
+  const { user, signout } = useAuth()
+
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Tutup saat klik di luar / tekan ESC
@@ -62,15 +65,27 @@ export default function Nav() {
     [t]
   )
 
-  const displayName = (user as any)?.displayName || t('user.fallback')
-  const email = (user as any)?.email
-  const photoURL = (user as any)?.photoURL
+  // ⬇️ sesuaikan dengan shape user baru
+  const displayName = user?.name?.trim() || t('user.fallback')
+  const email = user?.email || null
+  const photoURL = user?.photoUrl || undefined
 
   // Toggle bahasa via cookie + refresh (tanpa ubah URL)
   const switchLocale = () => {
     const next = locale === 'en' ? 'id' : 'en'
     document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000`
     router.refresh()
+  }
+
+  // Handler sign out
+  const handleSignout = async () => {
+    try {
+      await signout()
+      setMenuOpen(false)
+      router.push('/auth/signin')
+    } catch {
+      // abaikan
+    }
   }
 
   return (
@@ -131,7 +146,7 @@ export default function Nav() {
             </>
           ) : (
             <div className="relative" ref={menuRef}>
-              {/* Tombol avatar (luar): avatar + NAMA + chevron */}
+              {/* Tombol avatar */}
               <button
                 id="avatarBtn"
                 onClick={() => setMenuOpen((v) => !v)}
@@ -187,10 +202,7 @@ export default function Nav() {
                   <hr className="my-1 border-neutral-200 dark:border-neutral-800" />
                   <button
                     role="menuitem"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      logout()
-                    }}
+                    onClick={handleSignout}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-neutral-900"
                   >
                     <LogoutIcon className="h-4 w-4" />
@@ -337,9 +349,9 @@ export default function Nav() {
                     {t('user.dashboard')}
                   </Link>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      await handleSignout()
                       setOpen(false)
-                      logout()
                     }}
                     className="block w-full rounded-xl border border-red-600 px-3 py-2 text-center text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white"
                   >
@@ -349,7 +361,7 @@ export default function Nav() {
               )}
             </nav>
 
-            {/* Sticky CTA bottom (safe-area aware) */}
+            {/* Sticky CTA bottom */}
             <div className="border-t border-neutral-200 bg-white px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950 [padding-bottom:calc(env(safe-area-inset-bottom)+12px)] space-y-2">
               <Link
                 href="/news"
@@ -451,87 +463,65 @@ function MenuItem({
   )
 }
 
-/* --------- Ikon SVG minimal (tanpa dependency) --------- */
-function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function BriefcaseIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="2" />
-      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  )
-}
-function FileTextIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M14 2v6h6M8 13h8M8 17h6M8 9h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-function NewspaperIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-      <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M12 16v-5M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
-function LightningIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M13 2 3 14h7l-1 8 12-14h-7l1-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function UserIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 3-9 6v1h18v-1c0-3-4-6-9-6Z" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  )
-}
-function GridIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  )
-}
-function LogoutIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M15 17l5-5-5-5M20 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 21h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  )
-}
-function GlobeIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M3 12h18M12 3a12 12 0 0 0 0 18M12 3a12 12 0 0 1 0 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
+/* --------- Ikon SVG minimal --------- */
+function HomeIcon(props: React.SVGProps<SVGSVGElement>) { /* ...sama seperti punyamu... */ return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+  </svg>
+)}
+function BriefcaseIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="2" />
+    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" />
+  </svg>
+)}
+function FileTextIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" strokeWidth="2" />
+    <path d="M14 2v6h6M8 13h8M8 17h6M8 9h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)}
+function NewspaperIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+    <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)}
+function InfoIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+    <path d="M12 16v-5M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)}
+function LightningIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M13 2 3 14h7l-1 8 12-14h-7l1-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+  </svg>
+)}
+function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)}
+function UserIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 3-9 6v1h18v-1c0-3-4-6-9-6Z" stroke="currentColor" strokeWidth="2" />
+  </svg>
+)}
+function GridIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" stroke="currentColor" strokeWidth="2" />
+  </svg>
+)}
+function LogoutIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path d="M15 17l5-5-5-5M20 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 21h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4" stroke="currentColor" strokeWidth="2" />
+  </svg>
+)}
+function GlobeIcon(props: React.SVGProps<SVGSVGElement>) { return (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+    <path d="M3 12h18M12 3a12 12 0 0 0 0 18M12 3a12 12 0 0 1 0 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)}

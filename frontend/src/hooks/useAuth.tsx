@@ -1,67 +1,94 @@
 // src/hooks/useAuth.tsx
-'use client'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+'use client';
 
-type UserLite = { name: string; email: string; profile?: any }
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+
+type User = {
+  id: string;
+  email: string;
+  name?: string | null;
+  photoUrl?: string | null;
+  cvUrl?: string | null;
+};
+
 type AuthCtx = {
-  user: UserLite | null
-  signin: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string) => Promise<void>
-  social: (provider: 'google'|'linkedin'|'microsoft', mode: 'login'|'signup') => Promise<void>
-  logout: () => void
-}
+  user: User | null;
+  loading: boolean;
+  signin: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
+  social: (provider: 'google' | 'linkedin' | 'microsoft', mode: 'login' | 'signup') => Promise<void>;
+  signout: () => Promise<void>;
+};
 
-const Ctx = createContext<AuthCtx>(null as any)
+const Ctx = createContext<AuthCtx>(null as any);
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserLite | null>(null)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // bootstrap session dari cookie (GET /auth/me)
   useEffect(() => {
-    const cur = localStorage.getItem('ark_current')
-    const users = JSON.parse(localStorage.getItem('ark_users') ?? '[]')
-    if (cur) {
-      const u = users.find((x: any) => x.email === cur)
-      if (u) setUser({ name: u.name, email: u.email, profile: u.profile })
-    }
-  }, [])
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch(`${API}/auth/me`, { credentials: 'include', cache: 'no-store' });
+        if (r.ok) {
+          const u = (await r.json()) as User;
+          if (alive) setUser(u);
+        } else {
+          if (alive) setUser(null);
+        }
+      } catch {
+        if (alive) setUser(null);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const signin: AuthCtx['signin'] = async (email, password) => {
-    const users = JSON.parse(localStorage.getItem('ark_users') ?? '[]')
-    const u = users.find((x: any) => x.email === email && x.password === password)
-    if (!u) throw new Error('Email or password is incorrect!')
-    setUser({ name: u.name, email: u.email, profile: u.profile })
-    localStorage.setItem('ark_current', u.email)
-  }
+    const r = await fetch(`${API}/auth/signin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.message || 'Login gagal');
+    setUser(data as User);
+  };
 
   const signup: AuthCtx['signup'] = async (name, email, password) => {
-    const users = JSON.parse(localStorage.getItem('ark_users') ?? '[]')
-    if (users.find((u: any) => u.email === email)) throw new Error('Email already registered!')
-    users.push({ name, email, password, profile: { location: '', phone: '', skills: '', cv: null } })
-    localStorage.setItem('ark_users', JSON.stringify(users))
-    localStorage.setItem('ark_current', email)
-    setUser({ name, email })
-  }
+    const r = await fetch(`${API}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.message || 'Gagal mendaftar');
+    setUser(data as User);
+  };
 
-  const social: AuthCtx['social'] = async (provider, mode) => {
-    const providerName = { google: 'Google', linkedin: 'LinkedIn', microsoft: 'Microsoft' }[provider]
-    const email = (mode === 'signup' ? 'newuser' : 'user') + `@${provider}.com`
-    const name = `${providerName} User`
-    const password = `${mode === 'signup' ? 'social_signup_' : 'social_login_'}${Date.now()}`
-    const users = JSON.parse(localStorage.getItem('ark_users') ?? '[]')
-    let u = users.find((x: any) => x.email === email)
-    if (!u) {
-      u = { name, email, password, socialProvider: provider, profile: { location: 'Jakarta', phone: '', skills: '', cv: null } }
-      users.push(u)
-      localStorage.setItem('ark_users', JSON.stringify(users))
-    }
-    localStorage.setItem('ark_current', email)
-    setUser({ name: u.name, email: u.email, profile: u.profile })
-  }
+  const social: AuthCtx['social'] = async (_provider, _mode) => {
+    throw new Error('Login sosial belum diaktifkan');
+  };
 
-  const logout = () => { localStorage.removeItem('ark_current'); setUser(null) }
+  const signout: AuthCtx['signout'] = async () => {
+    await fetch(`${API}/auth/signout`, { method: 'POST', credentials: 'include' });
+    setUser(null);
+  };
 
-  const value = useMemo(() => ({ user, signin, signup, social, logout }), [user])
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+  const value = useMemo(
+    () => ({ user, loading, signin, signup, social, signout }),
+    [user, loading]
+  );
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export const useAuth = () => useContext(Ctx)
+export const useAuth = () => useContext(Ctx);

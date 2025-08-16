@@ -2,13 +2,26 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import {useTranslations} from 'next-intl';
+import { useMemo } from 'react';
+import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Logo from '@/app/Images/Ungu__1_-removebg-preview.png'; // pastikan path & kapitalisasi benar
 
 export default function Footer() {
   const t = useTranslations();
-  const year = new Date().getFullYear();
+  const pathname = usePathname();
 
+  // Sembunyikan footer di semua halaman yang memiliki segmen "admin"
+  const hideOnThisPage = useMemo(() => {
+    if (!pathname) return false;
+    // hapus query/hash, pecah jadi segmen & cek apakah ada segmen "admin"
+    const segs = pathname.split('?')[0].split('#')[0].split('/').filter(Boolean);
+    return segs.includes('admin');
+  }, [pathname]);
+
+  if (hideOnThisPage) return null;
+
+  const year = new Date().getFullYear();
   const linkCls =
     'text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white';
 
@@ -78,7 +91,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-neutral-200 pt-5 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-400 md:flex-row">
-          <p>{t('footer.copyright', {year})}</p>
+          <p>{t('footer.copyright', { year })}</p>
           <p className="opacity-80">{t('footer.madeFor')}</p>
         </div>
       </div>

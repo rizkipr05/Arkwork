@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 /* ===================== Types ===================== */
 type Msg = { id: string; role: 'user' | 'assistant'; text: string; ts: number };
@@ -29,8 +30,6 @@ function formatTime(ts: number) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 function rid() {
-  // small fallback for older browsers without crypto.randomUUID
-  // (Next.js app router targets modern browsers, but just in case)
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -40,6 +39,16 @@ function rid() {
    Component
    ================================================== */
 export default function ChatbotWidget({ chatApi = DEFAULT_CHAT_API }: { chatApi?: string }) {
+  const pathname = usePathname();
+
+  // --- HIDE ON /admin ---
+  const hideOnThisPage = useMemo(() => {
+    if (!pathname) return false;
+    const segs = pathname.split('?')[0].split('#')[0].split('/').filter(Boolean);
+    return segs.includes('admin');
+  }, [pathname]);
+  if (hideOnThisPage) return null;
+
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState('');
@@ -124,7 +133,7 @@ export default function ChatbotWidget({ chatApi = DEFAULT_CHAT_API }: { chatApi?
         const data = await res.json();
         reply = (res.ok && (data.answer || data.message)) || reply;
       } catch {
-        // non‑JSON response
+        // non-JSON response
       }
 
       const a: Msg = { id: rid(), role: 'assistant', text: reply, ts: Date.now() };
